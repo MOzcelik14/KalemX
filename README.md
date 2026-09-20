@@ -1,1 +1,3 @@
 # KalemX
+
+başlıyoruz.
