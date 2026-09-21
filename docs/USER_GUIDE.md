@@ -27,23 +27,23 @@ Layer Shell ile desteklenen Wayland oturumunda araç çubuğu Overlay katmanınd
 kaydetmek için öncelikle ayrı ekran görüntüsü alıp görüntü düzenleyicide
 birleştirmek gerekir. KalemX bu betada ekran görüntüsü veya PDF import etmez.
 
-**Proje Kaydet** taşınabilir JSON biçimli \`.kalemx\` üretir. Kaydedilmiş
-çizimleri \`kalemx --open dosya.kalemx\` ile yeniden açabilirsin. X11'de
+**Proje Kaydet** taşınabilir JSON biçimli `.kalemx` üretir. Kaydedilmiş
+çizimleri `kalemx --open dosya.kalemx` ile yeniden açabilirsin. X11'de
 "Proje Aç" dosya seçicisi de vardır. Wayland'da normal dosya seçim
 pencereleri Layer Shell'in arkasında kalabildiğinden bu beta otomatik
 benzersiz kaydetme adları üretir ve proje açmak için komut satırını kullanır.
 
 ## Sorun giderme
 
-\`\`\`bash
+```bash
 echo "$XDG_SESSION_TYPE"
 env | grep '^GDK_BACKEND='
 /usr/bin/python3 -m kalemx --version
 /usr/bin/python3 -m kalemx
-\`\`\`
+```
 
-- \`GtkLayerShell\` eksik: dağıtımının GIR typelib paketini kur.
-- \`zwlr_layer_shell_v1\` yok: compositor Layer Shell desteklemiyor.
+- `GtkLayerShell` eksik: dağıtımının GIR typelib paketini kur.
+- `zwlr_layer_shell_v1` yok: compositor Layer Shell desteklemiyor.
 - Fare modu alttaki uygulamaya geçmiyorsa oturum, compositor ve terminal
   çıktısıyla GitHub Issue aç.
 - Çoklu monitörde ikinci ekranda çizemiyorsan bu beta tek ekranla sınırlı.
