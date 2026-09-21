@@ -20,6 +20,8 @@ class Overlay(Gtk.Window):
         self.set_keep_above(True)
         self.set_skip_taskbar_hint(True)
         self.set_app_paintable(True)
+        # Do not steal focus from the active application when drawing.
+        self.set_accept_focus(False)
         screen = self.get_screen()
         visual = screen.get_rgba_visual()
         if visual:
@@ -42,11 +44,17 @@ class Overlay(Gtk.Window):
         self.connect("button-release-event", self.on_release)
 
     def set_drawing_enabled(self, enabled):
-        self.drawing_enabled = enabled
+        """Make the overlay click-through without hiding existing strokes."""
         window = self.get_window()
-        if window:
-            window.input_shape_combine_region(
-                None if enabled else cairo.Region(), 0, 0)
+        if window is None:
+            raise RuntimeError("Overlay must be realized before changing mode")
+        # Set this on the GTK widget: direct GDK input shapes may be replaced
+        # by GTK when it updates a realized toplevel window.
+        self.input_shape_combine_region(None if enabled else cairo.Region())
+        # GDK 3.18+: pointer events go to windows *below* this overlay.
+        window.set_pass_through(not enabled)
+        self.drawing_enabled = enabled
+        print("KalemX:", "çizim modu" if enabled else "fare modu", flush=True)
 
     def on_press(self, _widget, event):
         if self.drawing_enabled and event.button == 1:
@@ -134,6 +142,8 @@ class Toolbar(Gtk.Window):
     def __init__(self, overlay):
         super().__init__(title="KalemX")
         self.overlay = overlay
+        # Always keep controls above the full-screen overlay in X11 stacking.
+        self.set_transient_for(overlay)
         self.set_keep_above(True)
         self.set_resizable(False)
         self.set_border_width(8)
@@ -142,7 +152,7 @@ class Toolbar(Gtk.Window):
         self.add(root)
         tools = Gtk.Box(spacing=4)
         root.pack_start(tools, False, False, 0)
-        self.mode_button = self.button(tools, "Fare modu", self.toggle_mode)
+        self.mode_button = self.button(tools, "✎ Çizim açık · Fareye geç", self.toggle_mode)
         self.button(tools, "Kalem", lambda *_: self.set_tool("pen"))
         self.button(tools, "Fosforlu", lambda *_: self.set_tool("highlighter"))
         self.button(tools, "Geri al", lambda *_: overlay.undo())
@@ -175,13 +185,20 @@ class Toolbar(Gtk.Window):
         box.pack_start(button, False, False, 0)
         return button
 
+    def update_mode_button(self):
+        self.mode_button.set_label(
+            "✎ Çizim açık · Fareye geç" if self.overlay.drawing_enabled
+            else "↖ Fare açık · Çizime geç")
+
     def toggle_mode(self, *_):
-        enabled = not self.overlay.drawing_enabled
-        self.overlay.set_drawing_enabled(enabled)
-        self.mode_button.set_label("Fare modu" if enabled else "Çizim modu")
+        self.overlay.set_drawing_enabled(not self.overlay.drawing_enabled)
+        self.update_mode_button()
 
     def set_tool(self, tool):
         self.overlay.tool = tool
+        if not self.overlay.drawing_enabled:
+            self.overlay.set_drawing_enabled(True)
+        self.update_mode_button()
 
     def choose_color(self, color):
         self.overlay.color = color
