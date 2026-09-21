@@ -26,16 +26,16 @@ iddia etmez. Wayland katmanı, desteklenmeyen compositor'da açıklayıcı hata 
 ## Kurulum / Install
 
 **Mint, Ubuntu ve Debian için en kolay yol:** Bir GitHub Release altında
-yayımlanan \`kalemx_*_all.deb\` paketini indir, sonra:
+yayımlanan `kalemx_*_all.deb` paketini indir, sonra:
 
-\`\`\`bash
+```bash
 sudo apt install ./kalemx_*_all.deb
 kalemx
-\`\`\`
+```
 
 DEB dosyası oluşmadan önce, kaynak koddan denemek için:
 
-\`\`\`bash
+```bash
 sudo apt update
 sudo apt install python3-gi python3-gi-cairo python3-cairo gir1.2-gtk-3.0
 # Yalnızca desteklenen Wayland oturumları için:
@@ -44,15 +44,15 @@ sudo apt install gir1.2-gtklayershell-0.1
 git clone https://github.com/MOzcelik14/KalemX.git
 cd KalemX
 /usr/bin/python3 -m kalemx
-\`\`\`
+```
 
-Var olan repoda beta dalını denemek için \`git fetch origin && git switch --track origin/feat/production-foundation\` komutunu kullan. Dal yerelde varsa \`git switch feat/production-foundation && git pull --ff-only\`.
+Var olan repoda beta dalını denemek için `git fetch origin && git switch --track origin/feat/production-foundation` komutunu kullan. Dal yerelde varsa `git switch feat/production-foundation && git pull --ff-only`.
 
-**Arch tabanlı**: \`sudo pacman -S python-gobject python-cairo gtk3 gtk-layer-shell\`.
+**Arch tabanlı**: `sudo pacman -S python-gobject python-cairo gtk3 gtk-layer-shell`.
 GtkLayerShell için GIR typelib paketinin yüklü olduğunu denetle.
-**Fedora tabanlı**: \`sudo dnf install python3-gobject python3-cairo gtk3 gtk-layer-shell\`;
+**Fedora tabanlı**: `sudo dnf install python3-gobject python3-cairo gtk3 gtk-layer-shell`;
 GIR typelib dağıtıma göre ayrı paket olabilir. Bu iki dağıtımda DEB kurulmaz:
-deponun kökünde \`python3 -m kalemx\` çalıştır.
+deponun kökünde `python3 -m kalemx` çalıştır.
 
 ## Kullanım
 
@@ -61,18 +61,18 @@ dikdörtgen / elips seç; fare modunda çizimler görünmeye devam eder ve
 tıklamalar alttaki uygulamaya geçer. **PNG yalnızca çizim katmanını dışa
 aktarır; masaüstünün ekran görüntüsünü kaydetmez.**
 
-**Proje Kaydet**: düzenlenebilir \`.kalemx\` JSON çizim belgesi.
+**Proje Kaydet**: düzenlenebilir `.kalemx` JSON çizim belgesi.
 **Proje Aç**: X11 üzerinde dosya seçici ile; Wayland'da
-\`kalemx --open /dosya/yolu.kalemx\`. Wayland'da kaydetme konumları:
-\`~/Pictures\` (PNG) ve \`~/Documents\` (proje); bu dizinler yoksa ev dizini.
+`kalemx --open /dosya/yolu.kalemx`. Wayland'da kaydetme konumları:
+`~/Pictures` (PNG) ve `~/Documents` (proje); bu dizinler yoksa ev dizini.
 
 Diğer komutlar:
 
-\`\`\`bash
+```bash
 kalemx --version
 kalemx --help
 kalemx --open ~/Documents/ornek.kalemx
-\`\`\`
+```
 
 ## Belgeler
 
