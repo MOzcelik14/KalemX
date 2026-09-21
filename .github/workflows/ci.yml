@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "feat/**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install system runtime and test tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-gi python3-gi-cairo python3-cairo \
+            gir1.2-gtk-3.0 gir1.2-gtklayershell-0.1 xvfb \
+            python3-venv dpkg-dev desktop-file-utils
+      - name: Compile all Python modules
+        run: /usr/bin/python3 -m compileall -q kalemx tests
+      - name: Model and Cairo rendering tests
+        run: /usr/bin/python3 -m unittest discover -s tests -v
+      - name: X11 end-to-end headless smoke test
+        run: |
+          XDG_SESSION_TYPE=x11 xvfb-run -a \
+            /usr/bin/python3 -m kalemx --smoke-test
+      - name: Validate desktop and SVG metadata
+        run: |
+          desktop-file-validate data/*.desktop
+          /usr/bin/python3 -c "import xml.etree.ElementTree as x; x.parse('data/kalemx.svg')"
+      - name: Assemble and inspect DEB
+        run: |
+          bash scripts/build_deb.sh
+          dpkg-deb --info dist/*.deb
+          test -n "$(dpkg-deb --contents dist/*.deb | grep /usr/bin/kalemx)"
+      - name: Upload candidate package
+        uses: actions/upload-artifact@v4
+        with:
+          name: kalemx-deb
+          path: dist/*.deb
