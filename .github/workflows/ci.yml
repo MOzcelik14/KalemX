@@ -37,6 +37,12 @@ jobs:
           bash scripts/build_deb.sh
           dpkg-deb --info dist/*.deb
           test -n "$(dpkg-deb --contents dist/*.deb | grep /usr/bin/kalemx)"
+      - name: Validate wheel and source distribution
+        run: |
+          /usr/bin/python3 -m venv /tmp/kalemx-ci-build
+          /tmp/kalemx-ci-build/bin/pip install --disable-pip-version-check build
+          /tmp/kalemx-ci-build/bin/python -m build --wheel --sdist --outdir dist
+          ls dist/*.whl dist/*.tar.gz
       - name: Upload candidate package
         uses: actions/upload-artifact@v4
         with:
