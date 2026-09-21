@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kalemx"
+version = "0.2.0b1"
+description = "Screen annotation and classroom drawing for Linux"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [{name = "Murat Özçelik"}]
+keywords = ["linux", "annotation", "wayland", "x11", "education"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: X11 Applications :: GTK",
+  "Intended Audience :: Education",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3",
+  "Topic :: Multimedia :: Graphics :: Editors",
+]
+
+[project.scripts]
+kalemx = "kalemx.app:main"
+
+[project.urls]
+Homepage = "https://github.com/MOzcelik14/KalemX"
+Issues = "https://github.com/MOzcelik14/KalemX/issues"
+
+[tool.setuptools]
+packages = ["kalemx"]
