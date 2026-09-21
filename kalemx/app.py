@@ -6,8 +6,9 @@ from pathlib import Path
 import cairo
 import gi
 
+gi.require_version("Gdk", "3.0")
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gdk, Gtk
+from gi.repository import Gtk, Gdk
 
 COLORS = ("#e53935", "#ffb300", "#43a047", "#1e88e5", "#ffffff", "#111111")
 
