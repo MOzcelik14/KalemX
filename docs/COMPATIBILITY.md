@@ -16,7 +16,7 @@ Python ve GTK'nin bulunması genel ekran çizimi için yeterli değildir.
 
 **XWayland, native Wayland katmanının alternatifi değildir.** Ekranın
 üzerinde kalma ve alttaki uygulamalara tıklama ayrı ayrı compositor
-entegrasyonu gerektirir. \`GDK_BACKEND=x11\` zorlaması GNOME Wayland için
+entegrasyonu gerektirir. `GDK_BACKEND=x11` zorlaması GNOME Wayland için
 çözüm diye önerilmez.
 
 **Beta sınırları:** İlk monitör, yerel koordinatlar, hotplug ve kesirli
