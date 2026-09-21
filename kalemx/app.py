@@ -1,6 +1,7 @@
 """KalemX X11 screen annotation prototype."""
 import os
 import sys
+from datetime import datetime
 from pathlib import Path
 
 import cairo
@@ -14,8 +15,9 @@ COLORS = ("#e53935", "#ffb300", "#43a047", "#1e88e5", "#ffffff", "#111111")
 
 
 class Overlay(Gtk.Window):
-    def __init__(self):
+    def __init__(self, monitor=None):
         super().__init__(title="KalemX overlay")
+        self.is_wayland = monitor is not None
         self.set_decorated(False)
         self.set_keep_above(True)
         self.set_skip_taskbar_hint(True)
@@ -26,8 +28,13 @@ class Overlay(Gtk.Window):
         visual = screen.get_rgba_visual()
         if visual:
             self.set_visual(visual)
-        self.set_default_size(screen.get_width(), screen.get_height())
-        self.move(0, 0)
+        if monitor is None:
+            self.set_default_size(screen.get_width(), screen.get_height())
+            self.move(0, 0)
+        else:
+            geometry = monitor.get_geometry()
+            # Layer Shell will stretch the window over this output.
+            self.set_default_size(geometry.width, geometry.height)
         self.strokes = []
         self.redo_stack = []
         self.current = None
@@ -131,9 +138,10 @@ class Overlay(Gtk.Window):
             self.queue_draw()
 
     def save_png(self, path):
-        screen = self.get_screen()
-        surface = cairo.ImageSurface(
-            cairo.FORMAT_ARGB32, screen.get_width(), screen.get_height())
+        width, height = self.get_allocated_width(), self.get_allocated_height()
+        if width <= 0 or height <= 0:
+            raise ValueError("Çizim katmanının boyutu henüz belirlenmedi.")
+        surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
         self.render(cairo.Context(surface))
         surface.write_to_png(str(path))
 
@@ -143,7 +151,8 @@ class Toolbar(Gtk.Window):
         super().__init__(title="KalemX")
         self.overlay = overlay
         # Always keep controls above the full-screen overlay in X11 stacking.
-        self.set_transient_for(overlay)
+        if not overlay.is_wayland:
+            self.set_transient_for(overlay)
         self.set_keep_above(True)
         self.set_resizable(False)
         self.set_border_width(8)
@@ -176,7 +185,11 @@ class Toolbar(Gtk.Window):
         scale.connect("value-changed",
                       lambda widget: setattr(overlay, "width", widget.get_value()))
         colors.pack_start(scale, False, False, 0)
-        self.move(60, 50)
+        self.status = Gtk.Label(label="")
+        self.status.set_xalign(0)
+        root.pack_start(self.status, False, False, 0)
+        if not overlay.is_wayland:
+            self.move(60, 50)
 
     @staticmethod
     def button(box, label, callback):
@@ -204,6 +217,22 @@ class Toolbar(Gtk.Window):
         self.overlay.color = color
 
     def save(self, *_):
+        if self.overlay.is_wayland:
+            # Regular file chooser may appear behind the Layer Shell canvas.
+            pictures = Path.home() / "Pictures"
+            directory = pictures if pictures.is_dir() else Path.home()
+            path = directory / (
+                "kalemx-" + datetime.now().strftime("%Y%m%d-%H%M%S-%f")
+                + ".png")
+            try:
+                self.overlay.save_png(path)
+            except (OSError, ValueError, cairo.Error) as exc:
+                self.status.set_text("Kaydedilemedi: " + str(exc))
+                print("KalemX:", exc, file=sys.stderr)
+            else:
+                self.status.set_text("Kaydedildi: " + str(path))
+                print("KalemX: Kaydedildi:", path, flush=True)
+            return
         dialog = Gtk.FileChooserDialog(
             title="Çizimi PNG olarak kaydet", parent=self,
             action=Gtk.FileChooserAction.SAVE)
@@ -225,11 +254,27 @@ class Toolbar(Gtk.Window):
 
 
 def main():
-    if os.environ.get("XDG_SESSION_TYPE", "").lower() == "wayland" or not os.environ.get("DISPLAY"):
-        print("KalemX 0.1 alpha requires an X11 session.", file=sys.stderr)
-        raise SystemExit(2)
-    overlay = Overlay()
-    overlay.show_all()
-    toolbar = Toolbar(overlay)
+    session = os.environ.get("XDG_SESSION_TYPE", "").lower()
+    if session == "wayland":
+        from .wayland import WaylandUnavailable, configure_overlay
+        from .wayland import configure_toolbar, prepare
+
+        try:
+            layer_shell, monitor = prepare()
+        except WaylandUnavailable as exc:
+            print("KalemX Wayland:", exc, file=sys.stderr)
+            raise SystemExit(2) from exc
+        overlay = Overlay(monitor)
+        configure_overlay(overlay, layer_shell, monitor)
+        overlay.show_all()
+        toolbar = Toolbar(overlay)
+        configure_toolbar(toolbar, layer_shell, monitor)
+    else:
+        if not os.environ.get("DISPLAY"):
+            print("KalemX: X11 DISPLAY bulunamadı.", file=sys.stderr)
+            raise SystemExit(2)
+        overlay = Overlay()
+        overlay.show_all()
+        toolbar = Toolbar(overlay)
     toolbar.show_all()
     Gtk.main()

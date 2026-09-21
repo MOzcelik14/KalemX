@@ -1,0 +1,14 @@
+name: Source checks
+
+on:
+  push:
+    branches: [main, "feat/**"]
+  pull_request:
+
+jobs:
+  python-syntax:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile all Python modules
+        run: python3 -m compileall -q kalemx
