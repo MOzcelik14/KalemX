@@ -1,6 +1,6 @@
 # KalemX teknik mimari
 
-\`\`\`text
+```text
 kalemx/
   model.py       # GTK/Cairo bağımsız Stroke, Document, JSON
   render.py      # Cairo tuval, şekiller, alfa silme, PNG
@@ -15,18 +15,18 @@ scripts/
 .github/workflows/
   ci.yml         # syntax, unit test, Xvfb smoke, desktop-file, DEB
   release.yml    # etiketli release: DEB/wheel/sdist/source/SHA256
-\`\`\`
+```
 
 ## Veri akışı
 
 Ekran fare hareketleri başlangıç/ara/bitiş koordinatlarına çevrilir.
-\`Stroke\` değişmez veri yapısıdır. \`Document\` ekle/sil/geçmiş işlerini
-üstlenir. Her çizimde ve PNG dışa aktarımında \`render.surface()\` Cairo
-ARGB32 yüzeyi oluşturur. Silgi ayrı bir araçtır ve \`OPERATOR_CLEAR\`
+`Stroke` değişmez veri yapısıdır. `Document` ekle/sil/geçmiş işlerini
+üstlenir. Her çizimde ve PNG dışa aktarımında `render.surface()` Cairo
+ARGB32 yüzeyi oluşturur. Silgi ayrı bir araçtır ve `OPERATOR_CLEAR`
 ile önceki çizgilerin alfa kanalını temizler; temizleme işlemi de normal
 bir Stroke olduğundan undo/redo ve proje kayıtlarıyla korunur.
 
-JSON dosya sürümü \`1\`'dir; bilinmeyen araç/format/sürüm reddedilir.
+JSON dosya sürümü `1`'dir; bilinmeyen araç/format/sürüm reddedilir.
 Import boyutu sınırı 30 MB, strok sınırı 20.000, stroke nokta sınırı
 100.000'dir. Dosyalar kod olarak çalıştırılmaz.
 
@@ -39,7 +39,7 @@ Layer Shell varmış gibi taklit etmek desteklenmiyor.
 
 **GTK3 kararı:** Eski X11 kodu ve GtkLayerShell 0.1 API kararlılığı için
 bu beta GTK3 kullanır. GTK4 portu kendi kapsamlı migrasyonunu ve
-\`gtk4-layer-shell\` bağımlılığını gerektirir.
+`gtk4-layer-shell` bağımlılığını gerektirir.
 
 ## Güvenlik ve gizlilik
 
