@@ -2,6 +2,7 @@ name: Release
 
 on:
   push:
+    branches: [main]
     tags: ["v*"]
   workflow_dispatch:
 
@@ -32,7 +33,7 @@ jobs:
           /usr/bin/python3 -m unittest discover -s tests -v
           XDG_SESSION_TYPE=x11 xvfb-run -a \
             /usr/bin/python3 -m kalemx --smoke-test
-      - name: Build DEB and wheel
+      - name: Build DEB and Python packages
         run: |
           bash scripts/build_deb.sh
           /usr/bin/python3 -m venv /tmp/kalemx-build
@@ -40,9 +41,8 @@ jobs:
           /tmp/kalemx-build/bin/python -m build --wheel --sdist \
             --outdir dist
       - name: Create source archive
-        if: github.ref_type == 'tag'
         run: |
-          version="$(printf '%s' "$GITHUB_REF_NAME" | cut -c2-)"
+          version="$(/usr/bin/python3 -c 'from kalemx import __version__; print(__version__)')"
           git archive --format=tar.gz \
             --prefix="KalemX-$version/" \
             -o "dist/KalemX-$version-source.tar.gz" HEAD
@@ -53,17 +53,28 @@ jobs:
         with:
           name: kalemx-release
           path: dist/
-      - name: Publish GitHub Release
-        if: github.ref_type == 'tag'
+      - name: Publish versioned GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
+          version="$(/usr/bin/python3 -c 'from kalemx import __version__; print(__version__)')"
+          tag="v$version"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Release $tag already exists; skip duplicate publish."
+            exit 0
+          fi
           prerelease=""
-          if [[ "$GITHUB_REF_NAME" == *b* || "$GITHUB_REF_NAME" == *rc* ]]; then
+          if [[ "$version" == *b* || "$version" == *rc* || "$version" == *a* ]]; then
             prerelease="--prerelease"
           fi
-          gh release create "$GITHUB_REF_NAME" dist/* \
-            --title "KalemX $GITHUB_REF_NAME" \
-            --notes-file docs/RELEASE_NOTES.md \
-            --verify-tag $prerelease
+          if git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
+            gh release create "$tag" dist/* \
+              --title "KalemX $tag" \
+              --notes-file docs/RELEASE_NOTES.md --verify-tag $prerelease
+          else
+            gh release create "$tag" dist/* \
+              --title "KalemX $tag" \
+              --notes-file docs/RELEASE_NOTES.md \
+              --target "$GITHUB_SHA" $prerelease
+          fi
