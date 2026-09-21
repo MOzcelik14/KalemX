@@ -1,0 +1,69 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-gi python3-gi-cairo python3-cairo \
+            gir1.2-gtk-3.0 xvfb python3-venv dpkg-dev
+      - name: Verify version matches pushed tag
+        if: github.ref_type == 'tag'
+        shell: bash
+        run: |
+          version="$(/usr/bin/python3 -c 'from kalemx import __version__; print(__version__)')"
+          test "$GITHUB_REF_NAME" = "v$version"
+      - name: Check source and run tests
+        run: |
+          /usr/bin/python3 -m compileall -q kalemx tests
+          /usr/bin/python3 -m unittest discover -s tests -v
+          XDG_SESSION_TYPE=x11 xvfb-run -a \
+            /usr/bin/python3 -m kalemx --smoke-test
+      - name: Build DEB and wheel
+        run: |
+          bash scripts/build_deb.sh
+          /usr/bin/python3 -m venv /tmp/kalemx-build
+          /tmp/kalemx-build/bin/pip install --disable-pip-version-check build
+          /tmp/kalemx-build/bin/python -m build --wheel --sdist \
+            --outdir dist
+      - name: Create source archive
+        if: github.ref_type == 'tag'
+        run: |
+          version="$(printf '%s' "$GITHUB_REF_NAME" | cut -c2-)"
+          git archive --format=tar.gz \
+            --prefix="KalemX-$version/" \
+            -o "dist/KalemX-$version-source.tar.gz" HEAD
+      - name: Create SHA256 checksums
+        run: (cd dist && sha256sum *.deb *.whl *.tar.gz > SHA256SUMS.txt)
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: kalemx-release
+          path: dist/
+      - name: Publish GitHub Release
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          prerelease=""
+          if [[ "$GITHUB_REF_NAME" == *b* || "$GITHUB_REF_NAME" == *rc* ]]; then
+            prerelease="--prerelease"
+          fi
+          gh release create "$GITHUB_REF_NAME" dist/* \
+            --title "KalemX $GITHUB_REF_NAME" \
+            --notes-file docs/RELEASE_NOTES.md \
+            --verify-tag $prerelease
