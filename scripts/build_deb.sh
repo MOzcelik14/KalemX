@@ -40,4 +40,4 @@ Description: Screen annotation tool for Linux
 EOF
 mkdir -p dist
 dpkg-deb --build --root-owner-group "$root" \
-  "dist/kalemx_$deb_version"+"_all.deb"
+  "dist/kalemx_${deb_version}_all.deb"
