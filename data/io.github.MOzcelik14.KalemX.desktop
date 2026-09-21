@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=KalemX
+GenericName=Screen annotation
+GenericName[tr]=Ekran üzerine çizim
+Comment=Draw over your desktop and save annotations
+Comment[tr]=Ekranın üzerinde çizim yap ve çizimleri kaydet
+Exec=kalemx
+Icon=kalemx
+Terminal=false
+Categories=Education;Graphics;Utility;
+Keywords=draw;pen;screen;annotation;school;
+Keywords[tr]=kalem;çizim;ekran;tahta;ders;
+StartupNotify=true
