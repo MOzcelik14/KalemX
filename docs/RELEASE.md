@@ -8,8 +8,8 @@ Bu repo **MIT lisanslıdır**. Mevcut sürüm `kalemx/__init__.py` ve
 `.github/workflows/ci.yml` her push/PR ve manuel çalıştırmada
 Python derleme, GTK gerektirmeyen model testleri, Cairo testleri,
 Xvfb üzerinde gerçek GTK X11 açılış/fare/PNG smoke testi,
-desktop dosyası/SVG doğrulaması ve DEB paket kurulumu için dosya
-denetimi yapar. Üretilen DEB Actions artifact olarak yüklenir.
+desktop dosyası/SVG doğrulaması, DEB paket denetimi ve wheel/sdist
+derlemesi yapar. Üretilen DEB Actions artifact olarak yüklenir.
 **Xvfb testleri gerçek Wayland compositör testi değildir.**
 
 ## DEB
@@ -28,26 +28,31 @@ olup X11 için zorunlu değildir.
 
 ## GitHub release otomasyonu
 
-`.github/workflows/release.yml` `v*` etiketinde çalışır. Etiketi
-kaynak sürümüyle karşılaştırır, testleri çalıştırır; `.deb`, wheel,
-sdist, kaynak arşivi ve SHA256SUMS üretip GitHub Release'e yükler.
-`b`/ `rc` içeren etiketleri pre-release işaretler.
+`.github/workflows/release.yml` `main` dalına push yapıldığında,
+`v*` etiketi gönderildiğinde veya manuel çalıştırıldığında çalışır.
+Sürümün `kalemx/__init__.py` içindeki değerini okur, testleri çalıştırır;
+`.deb`, wheel, sdist, kaynak arşivi ve `SHA256SUMS.txt` üretir.
+Aynı sürümün Release'i zaten varsa yinelenen yayın yapmaz.
 
-**Release için sıralama:**
-1. PR'ı birleştir; CI'nin yeşil olduğundan emin ol.
-2. `main` üzerindeki `__version__` ve `pyproject.toml` aynı mı kontrol et.
-3. Ana dalda etiket oluştur ve gönder:
-   ```bash
-   git switch main
-   git pull --ff-only origin main
-   git tag v0.2.0b1
-   git push origin v0.2.0b1
-   ```
-4. GitHub Actions → Release işinin tamamlandığını doğrula.
-5. GitHub Releases altında çıktıları ve SHA256SUMS dosyasını kontrol et.
+**Otomatik yayın:** Değişiklikler önce CI'dan geçer; yeni sürüm
+`__version__` ve `pyproject.toml` dosyalarında birlikte artırılıp
+`main` dalına birleştirildiğinde iş akışı `v<SÜRÜM>` etiketi ve Release
+oluşturur. `b`, `a` veya `rc` içeren sürümler pre-release işaretlenir.
 
-Etiketi PR'ın test edilmeyen commit'ine değil, onaylanmış main commit'ine
-uygula. Etiketi tekrar kullanma; sonraki sürümde numarayı artır.
+**Etiketle manuel yayın** hâlâ desteklenir:
+```bash
+git switch main
+git pull --ff-only origin main
+git tag "v$(/usr/bin/python3 -c 'from kalemx import __version__; print(__version__)')"
+git push origin --tags
+```
+
+Mevcut etiketi tekrar kullanma: her yeni dağıtımda sürümü artır.
+Release çıktısını GitHub → Releases'ten kontrol et. GitHub,
+`~` karakteri taşıyan Debian dosya adlarını indirilebilir asset isminde
+nokta olarak normalleştirebilir; paketin içindeki sürümü
+`dpkg-deb --info DOSYA.deb` ile görebilirsin.
+
 Private GitHub reposunda Release dosyalarını yalnızca erişimi olanlar görür.
 Repo erişimini bilinçli olarak değiştirmedik.
 
